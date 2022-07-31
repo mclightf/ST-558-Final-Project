@@ -1,0 +1,59 @@
+
+
+```{r}
+library(readr)
+data <- read_csv("vgsales.csv")
+data <- na.omit(data)
+data <- filter(data, Year != "N/A")
+data$Year <- as.numeric(data$Year)
+```
+
+```{r}
+str(data)
+```
+
+```{r}
+library(ggplot2)
+
+plotdata <- data %>%
+  filter(Genre == "Action")
+
+plot <- ggplot(plotdata, aes(x=Genre, fill=Platform)) + 
+  geom_bar() +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1)) +
+  labs(title = "Plot", y = "Count") 
+plot
+```
+
+
+```{r}
+library(ggplot2)
+
+plot <- ggplot(data, aes(x=Year,y = Global_Sales, color=Platform)) + 
+  geom_point() +
+  labs(title = "Plot", y = "Count") +
+  theme(axis.text.x = element_text(angle = 45, hjust = 1))
+plot
+```
+
+
+```{r}
+library(ggplot2)
+
+
+plotdata <- data %>%
+  filter(Genre == "Action")
+
+plot <- ggplot(plotdata, aes(x=Year,y = Global_Sales, color = Genre)) + 
+  geom_line(stat = "summary", fun = "mean") +
+  labs(title = "Plot", y = "Count") 
+plot
+```
+```{r}
+plotdata <- data %>%
+  filter(Genre == "Action")
+
+ggplot(data, aes(x = Year, fill = Genre)) +
+  geom_histogram(alpha = 0.5, aes(y = ..density..), binwidth = 2) + 
+  geom_density(alpha = 0.5, position = "stack")
+```
