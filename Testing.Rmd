@@ -10,6 +10,7 @@ data$Year <- as.numeric(data$Year)
 
 ```{r}
 str(data)
+names(data)
 ```
 
 ```{r}
@@ -57,3 +58,169 @@ ggplot(data, aes(x = Year, fill = Genre)) +
   geom_histogram(alpha = 0.5, aes(y = ..density..), binwidth = 2) + 
   geom_density(alpha = 0.5, position = "stack")
 ```
+
+```{r}
+str(data)
+
+modeldata <- data %>%
+  select(Platform, Year, Genre, Publisher, Global_Sales) %>%
+  group_by(Publisher) %>%
+  filter(n()>=100) %>%
+  ungroup() %>% 
+  group_by(Platform) %>%
+  filter(n()>=100) %>%
+  ungroup()
+
+modeldata$Platform <- as.factor(modeldata$Platform)
+modeldata$Genre<- as.factor(modeldata$Genre)
+modeldata$Publisher <- as.factor(modeldata$Publisher)
+
+train <- sample(1:nrow(modeldata), size = nrow(modeldata)*0.8)
+test <- setdiff(1:nrow(modeldata),train)
+
+trainData <- modeldata[train,]
+testData  <- modeldata[test,]
+
+print(str(data))
+str(modeldata)
+```
+
+```{r}
+train_control <- trainControl(method = "repeatedcv", number=5, repeats=3)
+
+fit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "glm", 
+      preProcess = c("center", "scale"),
+      trControl = train_control)
+
+```
+
+```{r}
+#summary(fit)
+pred <- predict(fit, newdata = dplyr::select(testData, -Global_Sales))
+sqrt(mean((pred-testData$Global_Sales)^2))
+```
+
+```{r}
+fit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "rpart", 
+      preProcess = c("center", "scale"),
+      trControl = train_control,
+      tuneGrid = expand.grid(cp=c(0:100)/1000))
+```
+
+```{r}
+pred <- predict(fit, newdata = dplyr::select(testData, -Global_Sales))
+sqrt(mean((pred-testData$Global_Sales)^2))
+```
+
+```{r}
+levels(factor(trainData$Publisher))
+```
+
+
+```{r}
+library(tidyverse)
+library(caret)
+library(dplyr)
+library(readr)
+fit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "rf", 
+      preProcess = c("center", "scale"),
+      trControl = train_control,
+      tuneGrid = expand.grid(mtry=c(1:15)))
+```
+
+```{r}
+pred <- predict(fit, newdata = dplyr::select(testData, -Global_Sales))
+sqrt(mean((pred-testData$Global_Sales)^2))
+```
+
+```{r}
+sqrt(mean((mean(testData$Global_Sales)-testData$Global_Sales)^2))
+```
+
+```{r}
+library(dplyr)
+modeldata %>%
+  group_by(Genre, Year) %>%
+  dplyr::summarize(Count = n(), 
+                   Sum = sum(Global_Sales), 
+                   Average = mean(Global_Sales), 
+                   StdDev = sd(Global_Sales))
+```
+```{r}
+train_control <- trainControl(method = "repeatedcv", number=5, repeats=3)
+
+glmfit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "glm", 
+      preProcess = c("center", "scale"),
+      trControl = train_control)
+
+
+
+rpartfit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "rpart", 
+      preProcess = c("center", "scale"),
+      trControl = train_control,
+      tuneGrid = expand.grid(cp=c(0:100)/1000))
+
+
+train_control <- trainControl(method = "repeatedcv", number=5, repeats=1)
+rffit <- train(Global_Sales ~ ., 
+      data = trainData,
+      method = "rf", 
+      preProcess = c("center", "scale"),
+      trControl = train_control,
+      tuneGrid = expand.grid(mtry=c(1:15)))
+
+```
+
+```{r}
+glmpred <- predict(glmfit, newdata = dplyr::select(testData, -Global_Sales))
+glmpredtrain <- predict(glmfit, newdata = dplyr::select(trainData, -Global_Sales))
+
+glmresample <- postResample(glmpred, testData$Global_Sales)
+glmresampletrain <- postResample(glmpredtrain, trainData$Global_Sales)
+print(resample)
+str(resample)
+print(glmrmse)
+
+rpartpred <- predict(rpartfit, newdata = dplyr::select(testData, -Global_Sales))
+rpartpredtrain <- predict(rpartfit, newdata = dplyr::select(trainData, -Global_Sales))
+rpartresample <- postResample(rpartpred, testData$Global_Sales)
+rpartresampletrain <- postResample(rpartpredtrain, trainData$Global_Sales)
+
+
+rfpred <- predict(rffit, newdata = dplyr::select(testData, -Global_Sales))
+rfpredtrain <- predict(rffit, newdata = dplyr::select(trainData, -Global_Sales))
+rfresample <- postResample(rfpred, testData$Global_Sales)
+rfresampletrain <- postResample(rfpredtrain, trainData$Global_Sales)
+
+```
+
+```{r}
+out <- data.frame(rbind(glmresampletrain, glmresample, 
+                        rpartresampletrain, rpartresample, 
+                        rfresampletrain, rfresample
+))
+rownames(out) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
+out
+```
+```{r}
+
+```
+
+```{r}
+str(glmfit)
+glmfit$results$RMSE
+```
+
+
+
+

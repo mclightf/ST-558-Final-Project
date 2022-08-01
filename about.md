@@ -18,7 +18,8 @@ This data set comes from kaggle, and can be found [here](https://www.kaggle.com/
 - `Other_Sales` - Sales in the rest of the world (in millions)
 - `Global_Sales` - Total worldwide sales.
 
-We will use `Global_Sales` as the response variable in our analysis.
+We will use `Global_Sales` as the response variable in our analysis. Since many of these variables are clearly either non-predictive or related, we will only use the following variables in our analysis: `Platform`, `Year`, `Genre`, and `Publisher`, along with our response variables. We also perform some data pre-processing to remove categorical levels in `Platform` and `Publisher` with fewer than 100 occurrences to help our algorithms with centering and scaling the data appropriately, with the added benefit of de-cluttering some of the UI options a bit. You can still look through the raw data set on the **Data** tab!
+
 
 #### This App
 
