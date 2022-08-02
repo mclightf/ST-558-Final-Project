@@ -213,12 +213,29 @@ rownames(out) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Tra
 out
 ```
 ```{r}
-
+par(mfrow=c(1,3))
+ggplot(varImp(glmfit)) + ggtitle("GLM Variable Importance") + theme(axis.text.y = element_text(size = 8))
+ggplot(varImp(rpartfit)) + ggtitle("RTree Variable Importance") + theme(axis.text.y = element_text(size = 8))
+ggplot(varImp(rffit)) + ggtitle("RF Variable Importance") + theme(axis.text.y = element_text(size = 8))
 ```
 
 ```{r}
-str(glmfit)
-glmfit$results$RMSE
+str(varImp(glmfit))
+glm_var_imp <- varImp(glmfit)$importance %>% filter(Overall >= 10)
+print(glm_var_imp)
+ggplot(glm_var_imp)
+```
+```{r}
+new_data <- data.frame(Year = 2020, 
+                         Genre = "Action",
+                         Platform = "Wii",
+                         Publisher = "Nintendo")
+glm_pred <- predict(glmfit, new_data)
+glm_pred
+```
+
+```{r}
+length(data)
 ```
 
 

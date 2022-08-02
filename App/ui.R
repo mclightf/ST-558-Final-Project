@@ -83,7 +83,7 @@ shinyUI(
                                             br(),
                                             strong("General Linear Model"),
                                             br(),
-                                            "A general linear regression model buils on the ideaof a traditional multiple linear regression model of numerical predictors, but also allows for both categorical predictors. This is especially useful in our case, considering a majority of our predictive variables are categorical! ",
+                                            "A general linear regression model buils on the idea of a traditional multiple linear regression model of numerical predictors, but also allows for categorical predictors. This is especially useful in our case, considering a majority of our predictive variables are categorical! ",
                                             br(),
                                             "For multiple linear regression, the model is as follows:",
                                             br(),
@@ -109,12 +109,15 @@ shinyUI(
                                                 #Choose variables included
                                                 checkboxGroupInput("model_var", "Variables to include:",
                                                                    selected = "All",
-                                                                   choices = c("All", names(model_data))),
+                                                                   choices = c("All", names(model_data %>% select(-Global_Sales)))),
                                                 #Press button to run
                                                 actionButton("model_run", "Run Models!")
                                               ),
                                               mainPanel(
-                                                tableOutput("model_test_rmse")
+                                                tableOutput("model_test_rmse"),
+                                                plotOutput("var_imp_glm"),
+                                                plotOutput("var_imp_rpart"),
+                                                plotOutput("var_imp_rf")
                                               )
                                             )
                                             ),
@@ -132,7 +135,7 @@ shinyUI(
                                                 conditionalPanel(condition = "input.model_var.includes('Year')",
                                                                  sliderInput("model_year", "Year:",
                                                                              min = min(data$Year), max = max(model_data$Year), 
-                                                                             value = 2022, step = 1, sep = "")
+                                                                             value = max(model_data$Year), step = 1, sep = "")
                                                 ),
                                                 #If genre was used
                                                 conditionalPanel(condition = "input.model_var.includes('Genre')",
@@ -158,11 +161,14 @@ shinyUI(
                                                   br(),
                                                   selectizeInput("model_publish", "Publisher:",
                                                                  choices = levels(as.factor(model_data$Publisher)))
-                                                )
+                                                ),
+                                                
+                                                #Press button to predict
+                                                actionButton("model_predict", "Get Predictions!")
                                               ),
                                               mainPanel(
                                                 #Output predictions (perhaps plot)
-                                                
+                                                tableOutput("model_prediction")
                                               )
                                             )
                                    )
@@ -172,18 +178,20 @@ shinyUI(
                       sidebarLayout(
                         sidebarPanel(
                           #Subset Columns
-                          checkboxGroupInput("data_col", "Columns to include:",
+                          checkboxGroupInput("data_col", "Columns to include:", selected = "All",
                                              choices = c("All", names(data))),
                           br(),
                           #Subset Rows
-                          selectizeInput("data_platform", "Platform:",
-                                         choices = levels(as.factor(data$Platform))),
+                          sliderInput("data_num", "Number of Rows to Randomly Sample:",
+                                      min = 1, max = nrow(data), 
+                                      value = nrow(data), step = 1),
                           br(),
                           #Save file
                           actionButton("data_save", "Save Data as csv!")
                         ),
                         mainPanel(
                           #Output Data Table
+                          dataTableOutput("data_page_table")
                         )
                       )
                       ),

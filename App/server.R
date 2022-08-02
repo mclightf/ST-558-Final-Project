@@ -157,18 +157,27 @@ shinyServer(function(input, output, session) {
     
     #Potentially subset model data set based on desired variables
     modeling_data <- model_data
+    
     if ("All" %in% input$model_var) {
       modeling_data <- modeling_data
-    } else if (!("Platform" %in% input$model_var)) {
-      modeling_data <- model_data %>% select(-Platform)
-    } else if (!("Year" %in% input$model_var)) {
-      modeling_data <- model_data %>% select(-Year)
-    } else if (!("Genre" %in% input$model_var)) {
-      modeling_data <- model_data %>% select(-Genre)
-    } else if (!("Publisher" %in% input$model_var)) {
-      modeling_data <- model_data %>% select(-Publisher)
-    } else if (!input$model_var){
-      stop('Select at least one Predictive Variable Please!')
+    } else {
+      if (!("Platform" %in% input$model_var)) {
+        modeling_data <- model_data %>% 
+          select(-Platform)
+      } 
+      if (!("Year" %in% input$model_var)) {
+      modeling_data <- model_data %>% 
+        select(-Year)
+      } 
+      if (!("Genre" %in% input$model_var)) {
+      modeling_data <- model_data %>% 
+        select(-Genre)
+      } 
+      if (!("Publisher" %in% input$model_var)) {
+      modeling_data <- model_data %>% 
+        select(-Publisher)
+      } 
+      
     }
     #Perform Train/Test split
     train <- sample(1:nrow(modeling_data), size = nrow(modeling_data)*0.8)
@@ -189,11 +198,12 @@ shinyServer(function(input, output, session) {
                  method = "glm", 
                  preProcess = c("center", "scale"),
                  trControl = train_control)
-    #Make Predictions and find RMSE for both train and test data
+    #Make Predictions and find summary stats with postResample for train and test
     glm_test_pred <- predict(glm_fit, newdata = dplyr::select(test_data, -Global_Sales))
-    glm_test_rmse <- sqrt(mean((glm_test_pred-test_data$Global_Sales)^2))
     glm_train_pred <- predict(glm_fit, newdata = dplyr::select(train_data, -Global_Sales))
-    glm_train_rmse <- sqrt(mean((glm_train_pred-train_data$Global_Sales)^2))
+    glm_test_resample <- postResample(glm_test_pred, test_data$Global_Sales)
+    glm_train_resample <- postResample(glm_train_pred, train_data$Global_Sales)
+    
     
     #Increment progress
     incProgress(1/4, detail = "Performing Regression Tree Model")
@@ -205,11 +215,11 @@ shinyServer(function(input, output, session) {
                      preProcess = c("center", "scale"),
                      trControl = train_control,
                      tuneGrid = expand.grid(cp=c(0:100)/1000))
-    #Make Predictions and find RMSE on training and testing data
+    #Make Predictions and find summary stats with postResample for train and test
     rpart_test_pred <- predict(rpart_fit, newdata = dplyr::select(test_data, -Global_Sales))
-    rpart_test_rmse <- sqrt(mean((rpart_test_pred-test_data$Global_Sales)^2))
-    rpart_test_pred <- predict(rpart_fit, newdata = dplyr::select(test_data, -Global_Sales))
-    rpart_test_rmse <- sqrt(mean((rpart_test_pred-test_data$Global_Sales)^2))
+    rpart_train_pred <- predict(rpart_fit, newdata = dplyr::select(train_data, -Global_Sales))
+    rpart_test_resample <- postResample(rpart_test_pred, test_data$Global_Sales)
+    rpart_train_resample <- postResample(rpart_train_pred, train_data$Global_Sales)
     
     #Increment progress
     incProgress(1/4, detail = "Performing Random Forest Model")
@@ -223,9 +233,11 @@ shinyServer(function(input, output, session) {
                        preProcess = c("center", "scale"),
                        trControl = train_control,
                        tuneGrid = expand.grid(mtry=c(1:15)))
-    #Make Predictions and find RMSE
+    #Make Predictions and find summary stats with postResample for train and test
     rf_test_pred <- predict(rf_fit, newdata = dplyr::select(test_data, -Global_Sales))
-    rf_test_rmse <- sqrt(mean((rf_test_pred-test_data$Global_Sales)^2))
+    rf_train_pred <- predict(rf_fit, newdata = dplyr::select(train_data, -Global_Sales))
+    rf_test_resample <- postResample(rf_test_pred, test_data$Global_Sales)
+    rf_train_resample <- postResample(rf_train_pred, train_data$Global_Sales)
     
     #Increment progress
     incProgress(1/4, detail = "Creating Outputs")
@@ -233,22 +245,68 @@ shinyServer(function(input, output, session) {
     #Create output Data Frame
     output$model_test_rmse <- renderTable({
       #Create Data Frame of results
-      rmse_test <- c(glm_test_rmse,rpart_test_rmse, rf_testrmse)
-      return(rmse_df)
+      sum_df <- data.frame(rbind(glm_train_resample, glm_test_resample, 
+                                 rpart_train_resample, rpart_test_resample, 
+                                 rf_train_resample, rf_test_resample))
+      rownames(sum_df) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
+      return(sum_df)
     })
     
     #Create VarImpPlots
+    output$var_imp_glm <- renderPlot({
+      g <- ggplot(varImp(glmfit)) + 
+        ggtitle("GLM Variable Importance") + 
+        theme(axis.text.y = element_text(size = 8))
+      return(g)
     })
+    output$var_imp_rpart <- renderPlot({
+      g <- ggplot(varImp(rpartfit)) + 
+        ggtitle("RTree Variable Importance") + 
+        theme(axis.text.y = element_text(size = 8))
+      return(g)
+    })
+    output$var_imp_rf <- renderPlot({
+      g <- ggplot(varImp(rffit)) + 
+        ggtitle("RF Variable Importance") + 
+        theme(axis.text.y = element_text(size = 8))
+      return(g)
+    })
+    
+    })
+    #Predictions
+    observeEvent(input$model_predict, {
+      output$model_prediction <-renderTable({
+        new_data <- data.frame(Year = input$model_year, 
+                               Genre = input$model_genre,
+                               Platform = input$model_platform,
+                               Publisher = input$model_publish)
+        glm_pred <- predict(glm_fit, new_data)
+        rpart_pred <- predict(rpart_fit, new_data)
+        rf_pred <- predict(rf_fit, new_data)
+        pred_fd <- data.frame(GLM = glm_pred, RTree = rpart_pred, RF = rf_pred)
+      })
+    }) 
   })
 
-  #Predictions
   
   ###Data Page
   data_page <- reactive({
     #Perform reactive filtering here, starting from raw data
-    if ('All' %in% input$data_col){
-      data <- data
-    } 
+    table_data <- data
+    if ("All" %in% input$data_col) {
+      table_data <- table_data
+    } else {
+      #Loop through variables
+      for (i in 1:length(names(data))) {
+        if (!(names(data)[i] %in% input$data_col)) {
+          table_data <- table_data %>% 
+            select(-names(data)[i])
+        }
+      }
+    }
+    #Perform row subset
+    table_data <- sample_n(table_data, input$data_num)
+    return(table_data)
   })
   
   #Output data table
