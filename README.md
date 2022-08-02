@@ -11,14 +11,17 @@ The app has four pages:
 
 The packages needed to run the app are as follows:
 
-- `tidyverse`, which notably includes `ggplot2`, `dplyr`, `tidyr`, and `readr`, along with some others. 
-- `caret`
 - `shiny`
+- `dplyr`
+- `ggplot2`
+- `readr`
+- `mathjaxr`
+- `caret`
 
 The code to install those packages can be found below. 
 
 ``` r
-install.packages(c("tidyverse", "caret", "shiny"))
+install.packages(c("shiny", "dplyr", "ggplot2", "readr", "mathjaxr", "caret"))
 ```
 
 To run this app using the `runGitHub()` function from `shiny`, use the following code.

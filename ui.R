@@ -9,9 +9,10 @@ library(dplyr)
 library(ggplot2)
 library(readr)
 library(mathjaxr)
+library(caret)
 
 #Reading in Data and Data Pre-processing
-data <- read_csv("../vgsales.csv")
+data <- read_csv("vgsales.csv")
 data <- na.omit(data)
 data <- filter(data, Year != "N/A")
 data$Year <- as.numeric(data$Year)
@@ -31,7 +32,7 @@ shinyUI(
   #Create tabs via nav bar
   navbarPage("Video Games!",
              tabPanel("About",
-                      includeMarkdown("../about.md")
+                      includeMarkdown("about.md")
                       ),
              tabPanel("Data Exploration",
                       sidebarLayout(

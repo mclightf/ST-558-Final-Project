@@ -5,11 +5,14 @@
 
 #Install packages
 library(shiny)
-library(tidyverse)
+library(dplyr)
+library(ggplot2)
+library(readr)
+library(mathjaxr)
 library(caret)
 
 #Reading in Data and perform some Data Pre-processing
-data <- read_csv("../vgsales.csv")
+data <- read_csv("vgsales.csv")
 data <- na.omit(data)
 data <- filter(data, Year != "N/A")
 data$Year <- as.numeric(data$Year)
@@ -319,7 +322,7 @@ shinyServer(function(input, output, session) {
   #Save data table
   observeEvent(input$data_save, {
     data_page_df <- data_page()
-    write.csv(data_page_df,"../new_vgsales.csv")
+    write.csv(data_page_df,"new_vgsales.csv")
   })
 })
 
