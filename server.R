@@ -10,6 +10,7 @@ library(ggplot2)
 library(readr)
 library(mathjaxr)
 library(caret)
+library(DT)
 
 #Reading in Data and perform some Data Pre-processing
 data <- read_csv("vgsales.csv")
@@ -229,7 +230,7 @@ shinyServer(function(input, output, session) {
     
     #Random forest model with different trControl and tunegrid
     #No repeats for efficiency
-    train_control <- trainControl(method = "repeatedcv", number=2, repeats=1)
+    train_control <- trainControl(method = "repeatedcv", number=5, repeats=1)
     rf_fit <- train(Global_Sales ~ ., 
                        data = train_data,
                        method = "rf", 
@@ -251,7 +252,9 @@ shinyServer(function(input, output, session) {
       sum_df <- data.frame(rbind(glm_train_resample, glm_test_resample, 
                                  rpart_train_resample, rpart_test_resample, 
                                  rf_train_resample, rf_test_resample))
-      row.names(sum_df) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
+      Description <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
+      #combine data with description
+      sum_df <- cbind(Description, sum_df)
       return(sum_df)
     })
     
@@ -259,19 +262,19 @@ shinyServer(function(input, output, session) {
     output$var_imp_glm <- renderPlot({
       g <- ggplot(varImp(glmfit)) + 
         ggtitle("GLM Variable Importance") + 
-        theme(axis.text.y = element_text(size = 8))
+        theme(axis.text.y = element_text(size = 6))
       return(g)
     })
     output$var_imp_rpart <- renderPlot({
       g <- ggplot(varImp(rpartfit)) + 
         ggtitle("RTree Variable Importance") + 
-        theme(axis.text.y = element_text(size = 8))
+        theme(axis.text.y = element_text(size = 6))
       return(g)
     })
     output$var_imp_rf <- renderPlot({
       g <- ggplot(varImp(rffit)) + 
         ggtitle("RF Variable Importance") + 
-        theme(axis.text.y = element_text(size = 8))
+        theme(axis.text.y = element_text(size = 6))
       return(g)
     })
     
@@ -287,8 +290,9 @@ shinyServer(function(input, output, session) {
         glm_pred <- predict(glm_fit, new_data)
         rpart_pred <- predict(rpart_fit, new_data)
         rf_pred <- predict(rf_fit, new_data)
-        pred_fd <- data.frame(GLM = glm_pred, RTree = rpart_pred, RF = rf_pred)
-        row.names(pred_fd) <- "Global Sales (in millions)"
+        pred_df <- data.frame(GLM = glm_pred, RTree = rpart_pred, RF = rf_pred)
+        Description <- "Global Sales (in millions)"
+        pred_df <- cbind(Description, pred_df)
       })
     }) 
   })
@@ -318,7 +322,9 @@ shinyServer(function(input, output, session) {
   output$data_page_table <- renderDataTable({
     data_page_df <- data_page()
     return(data_page_df)
-  })
+  }, options = list(
+    scrollY = '300px', paging = FALSE
+  ))
   #Save data table
   observeEvent(input$data_save, {
     data_page_df <- data_page()

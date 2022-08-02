@@ -17,11 +17,12 @@ The packages needed to run the app are as follows:
 - `readr`
 - `mathjaxr`
 - `caret`
+- `DT`
 
 The code to install those packages can be found below:
 
 ``` r
-install.packages(c("shiny", "dplyr", "ggplot2", "readr", "mathjaxr", "caret"))
+install.packages(c("shiny", "dplyr", "ggplot2", "readr", "mathjaxr", "caret", "DT"))
 ```
 
 To run this app using the `runGitHub()` function from `shiny`, use the following code:

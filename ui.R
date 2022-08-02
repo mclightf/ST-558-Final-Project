@@ -10,6 +10,7 @@ library(ggplot2)
 library(readr)
 library(mathjaxr)
 library(caret)
+library(DT)
 
 #Reading in Data and Data Pre-processing
 data <- read_csv("vgsales.csv")
@@ -89,14 +90,14 @@ shinyUI(
                                             br(),
                                             #Add Math Jax capabilities
                                             withMathJax(),
-                                            helpText('The basic linear regression model is as follows: $$Y_{i} = \\beta_{0} + \\beta_{1}x_{1} + E_{i},$$ where \\(\\beta_{0}\\) is the y-intercept, \\(x_{i}\\) is the value of the predictive variable for the \\(i^{th}\\) observation, \\(\\beta_{1}\\) is the slope, and \\(E_{i}\\) is the error. Ideally, we want to minimize the sum of squared residuals, i.e. minimize $$min_{\\beta_0,\\beta_1} \\sum_{i=1}^n (E_i)^2$$'
+                                            helpText('For some background, the basic linear regression model is as follows: $$Y_{i} = \\beta_{0} + \\beta_{1}x_{i} + E_{i},$$ where \\(\\beta_{0}\\) is the y-intercept, \\(x_{i}\\) is the value of the predictive variable for the \\(i^{th}\\) observation, \\(\\beta_{1}\\) is the slope, and \\(E_{i}\\) is the error. Ideally, the goal is to minimize the sum of squared residuals, i.e. minimize $$min_{\\beta_0,\\beta_1} \\sum_{i=1}^n (E_i)^2$$'
                                             ),
                                             br(),
                                             br(),
                                             strong("Regression Tree"),
                                             br(),
                                             br(),
-                                            "A regression tree model is a non-linear method. The idea behind tree-based models is to break up the predictor space into different regions, and then to have a different prediction for each region. In the case of a regression tree, the prediction for a specific region is usually the mean of the observations from the training set in that region. Some pros of this method are that they are simple to understand and they naturally have built-in variable selection. Some cons of this method are that regression trees generally have high variance, meaning small changes in the data can drastically change the tree, and also that the trees can be prone to overfitting and usually require pruning (a process that removes some nodes).",
+                                            "A regression tree model is a non-linear method. The idea behind tree-based models is to break up the predictor space into different regions, and then to have a different prediction for each region. In the case of a regression tree, the prediction for a specific region is usually the mean of the observations from the training set in that region. Some pros of this method are that they are simple to understand and they naturally have built-in variable selection. Some cons of this method are that regression trees generally have high variance, meaning small changes in the data can drastically change the tree, and also the trees can be prone to overfitting and usually require pruning (a process that removes some nodes to prevent overfitting).",
                                             br(),
                                             br(),
                                             helpText('For a given leaf node \\(l\\), our prediction \\(\\hat{y}\\) is given by $$ \\hat{y} = \\frac{1}{n} \\sum_{i=1}^n y_i, $$ i.e. the sample mean of the dependent variable within that node.'),
@@ -105,13 +106,13 @@ shinyUI(
                                             strong("Random Forest"),
                                             br(),
                                             br(),
-                                            "A random forest model for regression builds on the idea of a regression tree, but incorporates bagging and random subsetting of the predictors. Bagging is the idea of creating many data sets of equivalent size to the training set with 2/3 of the same data with the rest being repetitive data, and then running an individual classification tree on that model. Then, for a regression model, the results are averaged across all trees. Random forest models specifically also take a random subset of the predictors in each individual tree. This generally aids prediction as it makes the individual tree predictions less correlated with each other. The pros of this method is that it usually performs better in prediction than a simple regression tree or bagging model, but on the other hand you do lose some interpretability and it takes much longer.",
+                                            "A random forest model for regression builds on the idea of a regression tree, but incorporates bagging and random subsetting of the predictors. Bagging is the idea of creating many data sets of equivalent size to the training set with 2/3 of the same data with the rest being repetitive data, and then running an individual regression tree on that model. Then, for a regression model, the results are averaged across all trees. Random forest models specifically also take a random subset of the predictors in each individual tree. This generally aids prediction as it makes the individual tree predictions less correlated with each other. The pros of this method is that it usually performs better in prediction than a simple regression tree or bagging model, but on the other hand you do lose some interpretability and it takes much longer.",
                                             br(),
                                             br(),
-                                            helpText('Predictions for unseen samples \\(x\\) can be found by averaging our predictions from the individual regression trees \\(y_{b}(x)\\): $$ \\hat{y} = \\frac{1}{N} \\sum_{i=1}^N y_{b}(x) $$'),
+                                            helpText('Predictions for a test observation \\(x\\) can be found by averaging our predictions from the \\(N\\) individual regression trees \\(y_{b}(x)\\): $$ \\hat{y} = \\frac{1}{N} \\sum_{b=1}^N y_{b}(x) $$'),
                                             br(),
                                             br(),
-                                            "In the model fitting tab, you will be able to customize the train/test split and choose which of the predictive variables, if not all, you would like to use in your models! Then you will be able to run the models and see the resulting RMSE of each regression model on the test set along with some additional summaries. Each model utilizes 5-fold cross validation."
+                                            "In the model fitting tab, you will be able to customize the train/test split and choose which of the predictive variables, if not all, you would like to use in your models! Then you will be able to run the models and see some resulting summary statistics of each regression model on the train and test sets, along with a plot of variable importance for each model. Each model utilizes 5-fold cross validation during training."
                                             ),
                                    tabPanel("Model Fitting",
                                             sidebarLayout(
