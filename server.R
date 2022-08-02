@@ -260,19 +260,19 @@ shinyServer(function(input, output, session) {
     
     #Create VarImpPlots
     output$var_imp_glm <- renderPlot({
-      g <- ggplot(varImp(glmfit)) + 
+      g <- ggplot(varImp(glm_fit)) + 
         ggtitle("GLM Variable Importance") + 
         theme(axis.text.y = element_text(size = 6))
       return(g)
     })
     output$var_imp_rpart <- renderPlot({
-      g <- ggplot(varImp(rpartfit)) + 
+      g <- ggplot(varImp(rpart_fit)) + 
         ggtitle("RTree Variable Importance") + 
         theme(axis.text.y = element_text(size = 6))
       return(g)
     })
     output$var_imp_rf <- renderPlot({
-      g <- ggplot(varImp(rffit)) + 
+      g <- ggplot(varImp(rf_fit)) + 
         ggtitle("RF Variable Importance") + 
         theme(axis.text.y = element_text(size = 6))
       return(g)
