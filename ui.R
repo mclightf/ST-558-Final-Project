@@ -112,7 +112,7 @@ shinyUI(
                                             helpText('Predictions for a test observation \\(x\\) can be found by averaging our predictions from the \\(N\\) individual regression trees \\(y_{b}(x)\\): $$ \\hat{y} = \\frac{1}{N} \\sum_{b=1}^N y_{b}(x) $$'),
                                             br(),
                                             br(),
-                                            "In the model fitting tab, you will be able to customize the train/test split and choose which of the predictive variables, if not all, you would like to use in your models! Then you will be able to run the models and see some resulting summary statistics of each regression model on the train and test sets, along with a plot of variable importance for each model. Each model utilizes 5-fold cross validation during training."
+                                            "In the model fitting tab, you will be able to customize the train/test split and choose which of the predictive variables, if not all, you would like to use in your models! Then you will be able to run the models. Since we are likely using categorical predictors with many levels, and thus have very many dummy variables, we have chosen not to use the `summary()` function for the `glm` model, as its output is very large. Instead, we include variable importance plots for all models as well was a thorough table of fit statistics. Each model utilizes 5-fold cross validation during training."
                                             ),
                                    tabPanel("Model Fitting",
                                             sidebarLayout(
