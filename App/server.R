@@ -226,7 +226,7 @@ shinyServer(function(input, output, session) {
     
     #Random forest model with different trControl and tunegrid
     #No repeats for efficiency
-    train_control <- trainControl(method = "repeatedcv", number=5, repeats=1)
+    train_control <- trainControl(method = "repeatedcv", number=2, repeats=1)
     rf_fit <- train(Global_Sales ~ ., 
                        data = train_data,
                        method = "rf", 
@@ -248,7 +248,7 @@ shinyServer(function(input, output, session) {
       sum_df <- data.frame(rbind(glm_train_resample, glm_test_resample, 
                                  rpart_train_resample, rpart_test_resample, 
                                  rf_train_resample, rf_test_resample))
-      rownames(sum_df) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
+      row.names(sum_df) <- c("GLM Train", "GLM Test", "RTree Train", "RTree Test", "RF Train", "RF Test")
       return(sum_df)
     })
     
@@ -272,18 +272,20 @@ shinyServer(function(input, output, session) {
       return(g)
     })
     
+    
     })
     #Predictions
     observeEvent(input$model_predict, {
       output$model_prediction <-renderTable({
-        new_data <- data.frame(Year = input$model_year, 
+        new_data <- data.frame(Platform = input$model_platform,
+                               Year = input$model_year, 
                                Genre = input$model_genre,
-                               Platform = input$model_platform,
                                Publisher = input$model_publish)
         glm_pred <- predict(glm_fit, new_data)
         rpart_pred <- predict(rpart_fit, new_data)
         rf_pred <- predict(rf_fit, new_data)
         pred_fd <- data.frame(GLM = glm_pred, RTree = rpart_pred, RF = rf_pred)
+        row.names(pred_fd) <- "Global Sales (in millions)"
       })
     }) 
   })
